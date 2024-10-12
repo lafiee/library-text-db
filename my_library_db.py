@@ -1,4 +1,5 @@
 import sys
+import os
 
 class LibraryTextDB:
     def __init__(self, db_file:str):
@@ -7,11 +8,10 @@ class LibraryTextDB:
         """
         try:
             with open(db_file):
-                pass 
-        except:
+                self.db_file = db_file 
+        except FileNotFoundError:
             print("database_file or path does not exist. Please check the input or create a new database file", db_file)
             sys.exit(1)
-        self.db_file = db_file
 
     db_file:str
 
@@ -30,11 +30,11 @@ class LibraryTextDB:
             print("Author can not be empty.\n")
             return
         ISBN = (input("Enter ISBN (without - or whitespace): "))
-        if ISBN == "" or not ISBN.isdigit():
+        if not ISBN.isdigit() or int(ISBN) <= 0:
             print("ISBN can not be empty, and has to be a number.\n")
             return
         year = (input("Enter year: "))
-        if year == "" or not year.isdigit():
+        if not year.isdigit() or int(year) <= 0:
             print("Year can not be empty, and has to be a number.\n")
             return
         confirm = input(f"Add {title}/{author}/{ISBN}/{year}? (Y/N): ")
@@ -45,20 +45,26 @@ class LibraryTextDB:
         """ 
         Write inserts a new book entry into the database file. The entries are sorted by year in ascending order.
         """
-        with open(self.db_file, "r+") as f:
-            data = f.readlines()
-            # Find the right spot for the given Book, where the year is larger or equal for a given line
-            for i, line in enumerate(data):
+        temp_file = self.db_file + ".tmp"
+        new_entry = f"{title}/{author}/{ISBN}/{year}\n"
+        inserted = False
+        line = None
+
+        with open(self.db_file, "r") as read_file, open(temp_file, "w") as write_file:
+            for line in read_file:
                 entry = line.split("/")
-                if int(entry[3]) >= year:
-                    data.insert(i, f"{title}/{author}/{ISBN}/{year}\n")
-                    break
-            else:
-                # If the year is the largest, append the new book to the end of the file
-                data.append(f"{title}/{author}/{ISBN}/{year}\n")
-            # Write everything back to the file.
-            f.seek(0)
-            f.writelines(data)
+                if not inserted and int(entry[3]) >= year:
+                    write_file.write(new_entry)
+                    inserted = True
+                write_file.write(line)
+            
+            # If the new entry has the largest year, append it at the end
+            if not inserted:
+                if line is not None and not line.endswith("\n"):
+                    write_file.write("\n")
+                write_file.write(new_entry)
+        # Replace the original file with the temporary file
+        os.replace(temp_file, self.db_file)
 
     def Print(self):
         """
