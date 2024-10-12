@@ -2,22 +2,30 @@ import sys
 
 class LibraryTextDB:
     def __init__(self, db_file:str):
+        """
+        Create a new LibraryTextDB object with a given database file.
+        """
+        try:
+            with open(db_file):
+                pass 
+        except:
+            print("database_file or path does not exist. Please check the input or create a new database file", db_file)
+            sys.exit(1)
         self.db_file = db_file
 
     db_file:str
 
-    class entry:
-        title: str
-        author: str
-        ISBN: int
-        year: int
-
     def AddBook(self):
+        """ 
+        AddBook promps user with inputs for a new book entry and validates the input.
+        """
         title = input("Enter title: ")
+        title = title.replace("/", " ")
         if title == "":
             print("Title can not be empty.\n")
             return
         author = input("Enter author: ")
+        author = author.replace("/", " ")
         if author == "":
             print("Author can not be empty.\n")
             return
@@ -33,12 +41,10 @@ class LibraryTextDB:
         if confirm == "Y" or confirm == "y":
             self.Write(title, author, int(ISBN), int(year))
 
-    # AddBook inserts a new book entry into the database file. The entries are sorted by year in ascending order.
-    def Write(self, title:str, author:str, ISBN:int, year:int):
-        # Clean up any / characters from the input
-        title = title.replace("/", " ")
-        author = author.replace("/", " ")
-
+    def Write(self, title:str, author:str, ISBN:int, year:int) -> None:
+        """ 
+        Write inserts a new book entry into the database file. The entries are sorted by year in ascending order.
+        """
         with open(self.db_file, "r+") as f:
             data = f.readlines()
             # Find the right spot for the given Book, where the year is larger or equal for a given line
@@ -55,7 +61,9 @@ class LibraryTextDB:
             f.writelines(data)
 
     def Print(self):
-        # Print styling. Title 30 chars, author row 15 chars, ISBN 13 chars, year 4 chars. Truncated and padded to fit.
+        """
+        Print styling. Title 30 chars, author row 15 chars, ISBN 13 chars, year 4 chars. Truncated and padded to fit.
+        """
         print("Title..........................Author..........ISBN..........Year")
         with open(self.db_file, "r") as f:
             for line in f:
@@ -66,14 +74,6 @@ if __name__ == "__main__":
     # Takes 1 command line argument, database text file
     if len(sys.argv) != 2:
         print("Usage: python my_library_db.py <database_file>")
-        sys.exit(1)
-
-    # Validate the database file exist
-    try:
-        with open(sys.argv[1]):
-            pass 
-    except:
-        print("database_file or path does not exist. Please check the input or create a new database file", sys.argv[1])
         sys.exit(1)
 
     db = LibraryTextDB(sys.argv[1])
